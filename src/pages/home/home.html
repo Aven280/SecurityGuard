@@ -1,0 +1,29 @@
+<ion-header>
+  <ion-navbar color="primary">
+    <ion-title>
+      Security Guard
+    </ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding>
+
+  <button ion-button full icon-left (click)="startTracking()" *ngIf="!isTracking">
+      <ion-icon name="locate"></ion-icon>
+      Iniciar Ronda
+    </button>
+  <button ion-button full color="danger" icon-left (click)="stopTracking()" *ngIf="isTracking">
+      <ion-icon name="hand"></ion-icon>
+      Finalizar Ronda
+  </button>
+
+  <div #map id="map"></div>
+
+  <ion-list>
+    <ion-list-header>Rondas Anteriores</ion-list-header>
+    <ion-item *ngFor="let route of previousTracks">
+      {{ route.finished | date }}, {{ route.path.length }} Distancias
+      <button ion-button clear item-end (click)="showHistoryRoute(route.path)">Ver Ronda</button>
+    </ion-item>
+  </ion-list>
+</ion-content>
