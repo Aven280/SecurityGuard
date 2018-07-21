@@ -3,6 +3,11 @@
     <ion-title>
       Security Guard
     </ion-title>
+    <ion-input type=number style="border: 1px solid black" [(ngModel)]="x"></ion-input>
+    <ion-input type=number style="border: 1px solid black" [(ngModel)]="y"></ion-input>
+    <ion-buttons end>
+      <button ion-button (click)="showMyLocation()"><ion-icon name="add"></ion-icon>Show my location</button>
+    </ion-buttons>
   </ion-navbar>
 </ion-header>
 

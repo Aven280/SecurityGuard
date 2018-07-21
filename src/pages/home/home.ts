@@ -1,10 +1,17 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { NavController, Platform,/* AlertController*/ } from 'ionic-angular';
+import { NavController, Platform } from 'ionic-angular';
 import { Geolocation } from '@ionic-native/geolocation';
-import { GoogleMaps } from '@ionic-native/google-maps';
 import { Subscription } from 'rxjs/Subscription';
 import { filter } from 'rxjs/operators';
 import { Storage } from '@ionic/storage';
+import {
+  GoogleMaps,
+  GoogleMap,
+  GoogleMapsEvent,
+  Marker,
+  GoogleMapsAnimation,
+  MyLocation
+} from '@ionic-native/google-maps';
 
 declare var google;
 
@@ -16,19 +23,32 @@ export class HomePage {
   @ViewChild('map') mapElement: ElementRef;
   map: any;
   currentMapTrack = null;
+  //GoogleMap mimapa;
 
   isTracking = false;
   trackedRoute = [];
   previousTracks = [];
+  x: number = 0;
+  y: number = 0;
 
   positionSubscription: Subscription;
 
-  constructor(public navCtrl: NavController, public plt: Platform, public geolocation: Geolocation,
-    public storage: Storage, public google: GoogleMaps/*private alertCtrl: AlertController*/) { }
+  constructor(public navCtrl: NavController, private plt: Platform, private geolocation: Geolocation, private storage: Storage, public googlemap: GoogleMaps) { }
 
   ionViewDidLoad() {
     this.plt.ready().then(() => {
       this.loadHistoricRoutes();
+
+      this.map.setMyLocationEnabled(true);
+
+      let mapOptions = {
+        zoom: 13,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+      }
+      this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
 
       this.geolocation.getCurrentPosition().then(pos => {
         let latLng = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
@@ -37,17 +57,6 @@ export class HomePage {
       }).catch((error) => {
         console.log('Error getting location', error);
       });
-
-      let mapOptions = {
-        zoom: 13,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-        mapTypeControl: false,
-        streetViewControl: false,
-        myLocationButton: true,
-        fullscreenControl: false
-      };
-
-      this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
     });
   }
 
@@ -106,4 +115,68 @@ export class HomePage {
   showHistoryRoute(route) {
     this.redrawPath(route);
   }
+
+  addInfoWindow(marker, content) {
+
+    let infoWindow = new google.maps.InfoWindow({
+      content: content
+    });
+
+    google.maps.event.addListener(marker, 'click', () => {
+      infoWindow.open(this.map, marker);
+    });
+
+  }
+
+  showMyLocation() {
+
+      this.geolocation.watchPosition().subscribe((position) => {
+      this.x = position.coords.longitude;
+      this.y = position.coords.latitude;
+
+      let latLng = new google.maps.LatLng(this.x, this.y);
+
+      let marker = new google.maps.Marker({
+        map: this.map,
+        icon: new google.maps.MarkerImage('https://dl1.cbsistatic.com/i/r/2017/02/02/f822aef7-e903-4c2e-8c25-b4e1f11e18f6/thumbnail/32x32/567ee0018dad579168f439fb1e7c8b18/fmimg8311216752695688258.png',
+          new google.maps.Size(22, 22),
+          new google.maps.Point(0, 18),
+          new google.maps.Point(11, 11)),
+        position: latLng
+      });
+
+      let myposition = new google.maps.Marker({
+        map: this.map,
+        position: latLng,
+        title: "Usted está aquí",
+        //icon: "imgs/information.png"
+      });
+
+
+      let content = "<h4>You are here</h4>";
+      this.addInfoWindow(marker, content);
+
+      //setear mapa
+      let mapOptions = {
+        zoom: 13,
+        mapTypeId: google.maps.MapTypeId.ROADMAP,
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false
+      }
+      this.map = new google.maps.Map(this.mapElement.nativeElement, mapOptions);
+
+      this.geolocation.getCurrentPosition().then(pos => {
+        this.map.setCenter(latLng);
+        this.map.setZoom(16);
+      }).catch((error) => {
+        console.log('Error getting location', error);
+      });
+
+    }, (err) => {
+      console.log(err);
+    });
+    }
+
+
 }
